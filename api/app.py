@@ -42,6 +42,7 @@ def hello_world():
       for rule in rules:
         if 'condition' in rule:
           if not eval(rule['condition'].format_map(envs)):
+            check_results[rk][rule['params']['key']] = True, f'条件不满足：{rule["condition"]}'
             continue
 
         checker = getattr(properties_file_checker, rule['type'], None)
@@ -49,6 +50,6 @@ def hello_world():
           raise Exception(f'[ERROR] "{rule["type"]}" not in {dir(properties_file_checker)}')
 
         check_result = checker(config, **rule['params'])
-        check_results[rk][rule['params']['key']] = check_result 
+        check_results[rk][rule['params']['key']] = check_result
 
     return check_results

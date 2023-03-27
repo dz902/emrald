@@ -7,12 +7,12 @@ ruleSets:
   flink.log4j:
     file: /etc/flink/conf/log4j.properties
     rules:
-      - type: valueEquals
+      - type: evalCheck
         priority: HIGH
         params:
             key: appender.main.type
-            desiredValue: RollingFile
-            msg: 日志不是滚动，可能导致磁盘撑满（实际：{}，建议：{}）
+            expr: '"{}" != "RollingFileAppender"'
+            msg: 日志不是滚动，可能导致磁盘撑满（实际：{}）
   hive-site.xml:
     file: /etc/hive/conf/hive-site.xml
     rules:
