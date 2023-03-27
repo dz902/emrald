@@ -1,0 +1,48 @@
+envs:
+  emr:
+    file: /var/lib/info/extraInstanceData.json
+    formatted:
+      version: ['releaseLabel', '([0-9\.]+)$']
+ruleSets:
+  flink.log4j:
+    file: /etc/flink/conf/log4j.properties
+    rules:
+      - type: valueEquals
+        priority: HIGH
+        params:
+            key: appender.main.type
+            desiredValue: RollingFile
+            msg: 日志不是滚动，可能导致磁盘撑满（实际：{}，建议：{}）
+  hive-site.xml:
+    file: /etc/hive/conf/hive-site.xml
+    rules:
+      - type: valueEquals
+        condition: '"{emr[version]}" >= "6.6.0"'
+        params:
+          key: hive.optimize.index.filter
+          desiredValue: false
+          msg: 当分区字段和分区值不完全一致时这个配置会导致无法选出数据（实际：{}，建议：{}）
+      - type: valueEquals
+        condition: '"{emr[version]}" >= "6.6.0"'
+        params:
+          key: hive.auto.convert.sortmerge.join
+          desiredValue: true
+          msg: EMR 6.6 引入的 BUG，见 HIVE-24073
+  tez-site.xml:
+    file: /etc/tez/conf/tez-site.xml
+    rules:
+      - type: evalCheck
+        params:
+          key: tez.grouping.split-count
+          expr: '{} != -1'
+          msg: Mapper 初始数量为 {}，虽然 Tez 会根据数据量调整，但调整幅度不会很大
+  hue.ini:
+    file: /etc/hue/conf/hue.ini
+    rules:
+      - type: evalCheck
+        priority: LOW
+        params:
+          key: max_number_of_sessions
+          expr: '{} > 5'
+          msg: Hue 多开窗口时需要增加最大并发会话数（实际：{}，建议大于 5）
+          
