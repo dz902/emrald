@@ -4,7 +4,7 @@ import os
 import re
 from inspect import getmembers, isfunction
 import yaml
-import json
+import rest
 import utils
 from checkers import properties_file_checker, xml_file_checker
 
@@ -53,3 +53,8 @@ def hello_world():
         check_results[rk][rule['params']['key']] = check_result
 
     return check_results
+
+@app.route("/yarn")
+def yarn():
+  apps = rest.get('/ws/v1/cluster')
+  return apps
