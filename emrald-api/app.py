@@ -1,10 +1,11 @@
-from flask import Flask
+from flask import Flask, request, Response
 
 import os
 import re
 from inspect import getmembers, isfunction
 import yaml
 import rest
+import requests
 import utils
 from checkers import properties_file_checker, xml_file_checker
 
@@ -54,7 +55,38 @@ def hello_world():
 
     return check_results
 
-@app.route("/yarn")
-def yarn():
-  apps = rest.get('/ws/v1/cluster')
-  return apps
+@app.route('/yarn/<path:path>', methods=['GET', 'OPTIONS'])
+def yarn(path):
+    if request.method == 'GET':
+      YARN_HOST = os.environ["YARN_HOST"]
+      if request.method == 'GET':
+          response = rest.get(f'{YARN_HOST}/{path}?{request.query_string.decode("ascii")}')
+
+      return Response(response.data, 200, mimetype = 'application/json', headers = {
+          'Access-Control-Allow-Origin': '*'
+      })
+    elif request.method == 'OPTIONS':
+      return Response(None, 200, headers = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Max-Age': '300'
+      })
+
+@app.route('/yarn_timeline/<path:path>', methods=['GET', 'OPTIONS'])
+def yarn_timeline(path):
+    if request.method == 'GET':
+      YARN_TIMELINE_HOST = os.environ["YARN_TIMELINE_HOST"]
+      if request.method == 'GET':
+        response = rest.get(f'{YARN_TIMELINE_HOST}/{path}?{request.query_string.decode("ascii")}')
+
+      return Response(response.data, 200, mimetype = 'application/json', headers = {
+        'Access-Control-Allow-Origin': '*'
+      })
+    elif request.method == 'OPTIONS':
+      return Response(None, 200, headers = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Max-Age': '300'
+      })

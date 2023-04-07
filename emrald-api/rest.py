@@ -4,7 +4,6 @@ from python_socks.sync import Proxy
 import json
 import os
 
-
 class ProxyHTTPConnection(HTTPConnection):
     def __init__(self, *args, **kwargs):
         socks_options = kwargs.pop("_socks_options")
@@ -52,8 +51,9 @@ def get(url):
     return request(url, "GET")
 
 def request(url, method="GET"):
-    YARN_HOST = os.environ["YARN_HOST"]
-    print(f"http://{YARN_HOST}{url}")
-    response = manager.request(method, f"http://{YARN_HOST}{url}")
-    print(response.data)
-    return json.loads(response.data)
+    print(f"http://{url}")
+    response = manager.request(method, f"http://{url}", headers = {
+        'Accept': 'application/json'
+    })
+
+    return response
