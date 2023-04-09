@@ -30,7 +30,7 @@ div.aui-page-panel
                     v-if="i == 0 && dagGroup.find(d => d['dagType'] == 'Map / Reduce')"
                   ) view sql
               td
-                router-link(:to="{ path: `/apps/${appId}/tez_dags/${dag['dagShortId']}` }") {{ dag['dagStage'] }}
+                router-link(:to="{ path: `/apps/${appId}/dags/${dag['dagShortId']}` }") {{ dag['dagStage'] }}
               td {{ dag['dagType'] }}
               td
                 | {{ dag['otherinfo']['numSucceededTasks'] }} 

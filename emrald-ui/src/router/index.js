@@ -3,6 +3,7 @@ import store from '../store'
 import Apps from '../components/Apps'
 import TezJob from '../components/TezJob'
 import TezDag from '../components/TezDag'
+import TezVertex from '../components/TezVertex'
 
 const routes = [
   {
@@ -10,8 +11,9 @@ const routes = [
     name: "apps",
     component: Apps
   },
-  { path: "/apps/:appId/tez_job", component: TezJob },
-  { path: "/apps/:appId/tez_dags/:dagId", component: TezDag }
+  { path: "/apps/:appId", component: TezJob },
+  { path: "/apps/:appId/dags/:dagId", component: TezDag },
+  { path: "/apps/:appId/dags/:dagId/vertex/:vertexId", component: TezVertex }
 ]
 
 const router = createRouter({

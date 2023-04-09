@@ -23,8 +23,8 @@ div.aui-page-panel
           tr(v-for="v in vertices")
             td 
               div
-                | {{ v['otherinfo']['vertexName'] }} 
-                small(v-if="vertexAliases[v['otherinfo']['vertexName']] && vertexAliases[v['otherinfo']['vertexName']] == '**FINAL**'") FINAL
+                router-link(:to="`${$route.path}/vertex/${v['vertexId']}`") {{ v['otherinfo']['vertexName'] }} 
+                small(v-if="vertexAliases[v['otherinfo']['vertexName']] && vertexAliases[v['otherinfo']['vertexName']] == '**FINAL**'")  FINAL
               div
                 small
                   span(v-if="vertexInputs[v['otherinfo']['vertexName']]") {{ vertexInputs[v['otherinfo']['vertexName']].join(', ') }} 
@@ -32,28 +32,28 @@ div.aui-page-panel
             td
               status-badge(:status="v['otherinfo']['status']")
             td
-              div(v-if="v['dagCounterInputRecords'] && v['dagCounterOutputRecords']")
-                counter(:counter="v['dagCounterInputRecords']") 
+              div(v-if="v['vertexCounterInputRecords'] && v['vertexCounterOutputRecords']")
+                counter(:counter="v['vertexCounterInputRecords']") 
                 |  → 
-                counter(:counter="v['dagCounterOutputRecords']") 
+                counter(:counter="v['vertexCounterOutputRecords']") 
               div(v-else)
                 | -
-              div(v-if="v['dagCounterInputFiles']")
-                | {{ v['dagCounterInputFiles'] }} 
+              div(v-if="v['vertexCounterInputFiles']")
+                | {{ v['vertexCounterInputFiles'] }} 
                 small files / 
-                | {{ v['dagCounterInputDirs'] }} 
+                | {{ v['vertexCounterInputDirs'] }} 
                 small dirs
             td
-              div(v-if="v['dagCounterFileReadBytes'] || v['dagCounterFileWrittenBytes']")
+              div(v-if="v['vertexCounterFileReadBytes'] || v['vertexCounterFileWrittenBytes']")
                 small FS 
-                size(:size="v['dagCounterFileReadBytes']")
+                size(:size="v['vertexCounterFileReadBytes']")
                 |  → 
-                size(:size="v['dagCounterFileWrittenBytes']")
-              div(v-if="v['dagCounterS3ReadBytes'] || v['dagCounterS3WrittenBytes']")
+                size(:size="v['vertexCounterFileWrittenBytes']")
+              div(v-if="v['vertexCounterS3ReadBytes'] || v['vertexCounterS3WrittenBytes']")
                 small S3 
-                size(:size="v['dagCounterS3ReadBytes']")
+                size(:size="v['vertexCounterS3ReadBytes']")
                 |  → 
-                size(:size="v['dagCounterS3WrittenBytes']")
+                size(:size="v['vertexCounterS3WrittenBytes']")
             td
               span {{ v['otherinfo']['numSucceededTasks'] }}
             td
@@ -74,7 +74,7 @@ import duration from './Duration'
 import size from './Size'
 import { createNamespacedHelpers } from 'vuex'
 
-const { mapActions, mapState } = createNamespacedHelpers('tezDag')
+const { mapActions, mapState } = createNamespacedHelpers('tezApp')
 
 export default {
   name: 'TezDagComponent',
@@ -89,7 +89,8 @@ export default {
   methods: {
     ...mapActions(['fetchVertices']),
     async setup() {
-      console.log(123)
+      console.log(333)
+      console.log(this.$route.path)
       await this.fetchVertices()
     }
   },
