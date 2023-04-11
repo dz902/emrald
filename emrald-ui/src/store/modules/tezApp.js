@@ -118,6 +118,50 @@ const actions = {
 
     dispatch('fetchDagExtraInfo')
   },
+  async fetchTasks({ commit, getters, dispatch, rootState }) {
+    if (!getters.activeVertex) {
+      await dispatch('fetchVertices')
+    }
+
+    const vertexFullId = getters.activeVertex['entity']
+
+    let result = await get(`/yarn_timeline/ws/v1/timeline/TEZ_TASK_ID?primaryFilter=TEZ_VERTEX_ID:"${vertexFullId}"`)
+    let json = await result.json()
+    let tasks = json['entities']
+
+    result = await get(`/yarn_timeline/ws/v1/timeline/TEZ_TASK_ATTEMPT_ID?primaryFilter=TEZ_VERTEX_ID:"${vertexFullId}"`)
+    json = await result.json()
+    let taskAttempts = json['entities']
+
+    taskAttempts = taskAttempts.reduce((p, c) => {
+      const k = 'task_' + c['entity'].match(/^attempt_(.+?)_[0-9]+$/)[1]
+      p[k] = p[k] || []
+      p[k].push(c)
+
+      return p
+    }, {})
+
+    console.log(taskAttempts)
+
+    tasks = tasks.map(t => {
+      const t2 = {}
+      t2['id'] = t['entity'].match(/([0-9]+)$/)[1]
+      t2['status'] = t['otherinfo']['status']
+      t2['attempts'] = taskAttempts[t['entity']]
+      t2['duration'] = t['otherinfo']['timeTaken']
+
+      const lastAttempt = t2['attempts'].slice(-1)[0]
+
+      t2['taskAttemptNodeId'] = lastAttempt['otherinfo']['nodeId']
+      t2['taskAttemptNodeShortId'] = t2['taskAttemptNodeId'].match(/^ip-((?:[0-9]+-){3}[0-9]+).+$/)?.[1] || t2['taskAttemptNodeId']
+      t2['taskAttemptLogUrlRunning'] = lastAttempt['otherinfo']['inProgressLogsURL']
+
+      return t2
+    })
+    tasks.sort((a, b) => Number.parseInt(a['id']) > Number.parseInt(b['id']))
+
+    commit('setTasks', tasks)
+  },
   async fetchDagExtraInfo({ commit, rootState }) {
     const appId = rootState.route.params['appId']
     const dagShortId = rootState.route.params['dagId']
@@ -171,7 +215,10 @@ const mutations = {
   },
   setVertices(state, vertices) {
     state['vertices'] = vertices
-  }
+  },
+  setTasks(state, tasks) {
+    state['tasks'] = tasks
+  },
 }
 
 export default {
