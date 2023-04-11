@@ -26,7 +26,7 @@ export default {
         scaledSize /= 1024
       }
 
-      return scaledSize.toFixed(1)
+      return scaledSize == size ? Number.parseInt(scaledSize) : scaledSize.toFixed(1)
     },
     unit() {
       let size = Number.parseFloat(this.size)

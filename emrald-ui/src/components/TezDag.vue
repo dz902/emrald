@@ -21,7 +21,8 @@ div.aui-page-panel
               div
                 small
                   span(v-if="vertexInputs[v['name']]") {{ vertexInputs[v['name']].join(', ') }} 
-                  span(v-if="vertexAliases[v['name']] && vertexAliases[v['name']] != '**FINAL**'") {{ vertexAliases[v['name']] }}
+                  span(v-if="vertexAliases[v['name']] && vertexAliases[v['name']] != '**FINAL**'") {{ vertexAliases[v['name']] }} 
+                  span(v-if="v['outputTable']")  → {{ v['outputTable'] }}
             td
               status-badge(:status="v['status']")
             td
@@ -32,10 +33,15 @@ div.aui-page-panel
               div(v-else)
                 | -
               div(v-if="v['counterInputFiles']")
+                small in 
                 | {{ v['counterInputFiles'] }} 
                 small files / 
                 | {{ v['counterInputDirs'] }} 
                 small dirs
+              div(v-if="v['counterCreatedFiles']")
+                small out 
+                | {{ v['counterCreatedFiles'] }} 
+                small files
             td
               div(v-if="v['counterFileReadBytes'] || v['counterFileWrittenBytes']")
                 small FS 

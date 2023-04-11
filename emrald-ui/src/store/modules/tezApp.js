@@ -78,49 +78,65 @@ const actions = {
       v2['name'] = otherinfo['vertexName']
       v2['status'] = otherinfo['status']
 
-      let hiveCounters = otherinfo['counters']['counterGroups'].find(
-        cg => cg['counterGroupName'] == 'HIVE'
-      )
-      hiveCounters = hiveCounters ? hiveCounters['counters'] : null
-      const hiveInputCounters = findKv(
-        'counterGroupName',
-        'org.apache.hadoop.hive.ql.exec.tez.HiveInputCounters',
-        'counters',
-        otherinfo['counters']['counterGroups']
-      )
-      let tezCounters = findKv(
-        'counterGroupName', 
-        'org.apache.tez.common.counters.TaskCounter', 
-        'counters', 
-        otherinfo['counters']['counterGroups']
-      )
-      const fsCounters = findKv(
-        'counterGroupName', 
-        'org.apache.tez.common.counters.FileSystemCounter', 
-        'counters', 
-        otherinfo['counters']['counterGroups']
-      )
+      if (otherinfo['counters']) {
+        const counters = otherinfo['counters']
 
-      if (hiveInputCounters) {
-        v2['counterInputFiles'] = hiveInputCounters.find(c => c['counterName'].match(/^INPUT_FILES_/))?.counterValue
-        v2['counterInputDirs'] = hiveInputCounters.find(c => c['counterName'].match(/^INPUT_DIRECTORIES_/))?.counterValue
+        let hiveCounters = counters['counterGroups'].find(
+          cg => cg['counterGroupName'] == 'HIVE'
+        )
+        hiveCounters = hiveCounters ? hiveCounters['counters'] : null
+        const hiveInputCounters = findKv(
+          'counterGroupName',
+          'org.apache.hadoop.hive.ql.exec.tez.HiveInputCounters',
+          'counters',
+          counters['counterGroups']
+        )
+        let tezCounters = findKv(
+          'counterGroupName', 
+          'org.apache.tez.common.counters.TaskCounter', 
+          'counters', 
+          counters['counterGroups']
+        )
+        const fsCounters = findKv(
+          'counterGroupName', 
+          'org.apache.tez.common.counters.FileSystemCounter', 
+          'counters', 
+          counters['counterGroups']
+        )
+  
+        if (hiveInputCounters) {
+          v2['counterInputFiles'] = hiveInputCounters.find(c => c['counterName'].match(/^INPUT_FILES_/))?.counterValue
+          v2['counterInputDirs'] = hiveInputCounters.find(c => c['counterName'].match(/^INPUT_DIRECTORIES_/))?.counterValue
+        }
+  
+        v2['counterInputRecords'] = hiveCounters ? hiveCounters.find(c => c['counterName'].match(/^RECORDS_IN/)) : null
+        v2['counterInputRecords'] = v2['counterInputRecords']?.counterValue || tezCounters.find(c => c['counterName'].match(/^(REDUCE_INPUT_RECORDS|INPUT_RECORDS_PROCESSED)/))?.counterValue
+  
+        v2['counterOutputRecords'] = findKv('counterName', 'OUTPUT_RECORDS', 'counterValue', tezCounters)
+  
+        if (hiveCounters) {
+          v2['counterOutputRecords'] = v2['counterOutputRecords']?.counterValue || hiveCounters.find(c => c?.counterName?.match(/^(RECORDS_OUT_[0-9]+|RECORDS_OUT_OPERATOR_RS)/))?.counterValue
+        } else {
+          v2['counterOutputRecords'] = null
+        }
+
+        if (hiveCounters) {
+          v2['counterCreatedFiles'] = findKv('counterName', 'CREATED_FILES', 'counterValue', hiveCounters)
+          v2['outputTable'] = hiveCounters
+            .reduce((p, c ) => p.concat([c['counterName']]), [])
+            .find(k => k.match(/^RECORDS_OUT_[0-9]+/))
+            ?.match(/^RECORDS_OUT_[0-9]+_(.+)$/)?.[1]
+        }
+
+        v2['counterFileReadBytes'] = findKv('counterName', 'FILE_BYTES_READ', 'counterValue', fsCounters)
+        v2['counterFileWrittenBytes'] = findKv('counterName', 'FILE_BYTES_WRITTEN', 'counterValue', fsCounters)
+        v2['counterS3ReadBytes'] = findKv('counterName', 'S3_BYTES_READ', 'counterValue', fsCounters)
+        v2['counterS3WrittenBytes'] = findKv('counterName', 'S3_BYTES_WRITTEN', 'counterValue', fsCounters)
       }
 
-      v2['counterInputRecords'] = hiveCounters ? hiveCounters.find(c => c['counterName'].match(/^RECORDS_IN/)) : null
-      v2['counterInputRecords'] = v2['counterInputRecords']?.counterValue || tezCounters.find(c => c['counterName'].match(/^(REDUCE_INPUT_RECORDS|INPUT_RECORDS_PROCESSED)/))?.counterValue
-
-      v2['counterOutputRecords'] = findKv('counterName', 'OUTPUT_RECORDS', 'counterValue', tezCounters)
-
-      if (hiveCounters) {
-        v2['counterOutputRecords'] = v2['counterOutputRecords']?.counterValue || hiveCounters.find(c => c['counterName'].match(/^(RECORDS_OUT_1|RECORDS_OUT_OPERATOR_RS)/))['counterValue']
-      } else {
-        v2['counterOutputRecords'] = null
-      }
-
-      v2['counterFileReadBytes'] = findKv('counterName', 'FILE_BYTES_READ', 'counterValue', fsCounters)
-      v2['counterFileWrittenBytes'] = findKv('counterName', 'FILE_BYTES_WRITTEN', 'counterValue', fsCounters)
-      v2['counterS3ReadBytes'] = findKv('counterName', 'S3_BYTES_READ', 'counterValue', fsCounters)
-      v2['counterS3WrittenBytes'] = findKv('counterName', 'S3_BYTES_WRITTEN', 'counterValue', fsCounters)
+      v2['numSucceededTasks'] = otherinfo['numSucceededTasks']
+      v2['startTime'] = otherinfo['startTime']
+      v2['endTime'] = otherinfo['endTime']
 
       v2['statsAvgTaskDuration'] = otherinfo['stats']['avgTaskDuration']
       v2['statsMaxTaskDuration'] = otherinfo['stats']['maxTaskDuration']
@@ -190,9 +206,9 @@ const actions = {
       const vertexAliases = {}
       json['otherinfo']['dagPlan']['vertices'].forEach(v => {
         if (v['additionalInputs'] && v['additionalInputs'][0] && v['additionalInputs'][0]['name']) {
-          vertexAliases[v['Name']] = v['additionalInputs'][0]['name']
+          vertexAliases[v['vertexName']] = v['additionalInputs'][0]['name']
         } else if (v['additionalOutputs']) {
-          vertexAliases[v['Name']] = '**FINAL**'
+          vertexAliases[v['vertexName']] = '**FINAL**'
         }
       })
   
@@ -213,7 +229,7 @@ const actions = {
     }
   },
   async fetchDagSql({ commit }, dagId) {
-    const openDag = state['dags'].find((d) => d['dagId'] == dagId)
+    const openDag = state['dags'].find((d) => d['id'] == dagId)
     commit('setOpenDag', openDag)
 
     let result = await get(
