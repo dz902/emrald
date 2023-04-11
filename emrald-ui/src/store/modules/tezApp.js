@@ -2,6 +2,7 @@ import { get, findKv }  from '../../utils'
 
 const state = {
   dagExtraInfo: {},
+  openDag: null,
   dags: [],
   vertices: [],
   vertexAliases: {},
@@ -12,12 +13,12 @@ const getters = {
   activeDag(state, getters, rootState) {
     const { appId, dagId } = rootState.route.params
     const dagFullId = `dag_${appId}_${dagId}`
-    return state.dags.find(d => d['entity'] == dagFullId)
+    return state.dags.find(d => d['id'] == dagFullId)
   },
   activeVertex(state, getters, rootState) {
     const routeParams = rootState.route.params
     const vertexFullId = `vertex_${routeParams['appId']}_${routeParams['dagId']}_${routeParams['vertexId']}`
-    return state.vertices.find(v => v['entity'] == vertexFullId)
+    return state.vertices.find(v => v['id'] == vertexFullId)
   }
 }
 
@@ -32,19 +33,24 @@ const actions = {
     let dags = json['entities']
 
     dags = dags.map(d => {
-      const result = d['primaryfilters']['dagName'][0].match(/^(.+?)\((Stage-[0-9])\)/sm)
+      const d2 = {}
+      const result = d['primaryfilters']['dagName'][0].match(/^(.+?)\((Stage-[0-9]+)\)/sm)
       const otherinfo = d['otherinfo']
 
-      d['dagId'] = d['entity'].match(/([0-9]+)$/)[1]
-      d['dagType'] = 'File Merge' in otherinfo['vertexNameIdMapping'] ? 'File Merge' : 'Map / Reduce'
-      d['dagShortName'] = result ? result[1] : d['dagType']
-      d['dagStage'] = result ? result[2] : d['dagType']
-      d['dagCallerId'] = otherinfo['callerId']
+      d2['id'] = d['entity']
+      d2['shortId'] = d['entity'].match(/([0-9]+)$/)[1]
+      d2['type'] = 'File Merge' in otherinfo['vertexNameIdMapping'] ? 'File Merge' : 'Map / Reduce'
+      d2['shortName'] = result ? result[1] : d2['type']
+      d2['stage'] = result ? result[2] : d2['type']
+      d2['callerId'] = otherinfo['callerId']
+      d2['numSucceededTasks'] = otherinfo['numSucceededTasks']
+      d2['numKilledTasks'] = otherinfo['numKilledTasks']
+      d2['numFailedTasks'] = otherinfo['numFailedTasks']
+      d2['status'] = otherinfo['status']
+      d2['startTime'] = otherinfo['startTime']
+      d2['endTime'] = otherinfo['endTime']
 
-      const endTime = otherinfo['endTime'] ? otherinfo['endTime'] : (new Date()).getTime()
-      d['dagDuration'] = Math.round((endTime-otherinfo['startTime'])/1000)
-
-      return d
+      return d2
     })
 
     commit('setDags', dags)
@@ -63,11 +69,16 @@ const actions = {
     let vertices = json['entities']
 
     vertices = vertices.map(v => {
-      const v2 = v
+      const v2 = {}
 
-      v2['vertexId'] = v2['entity'].match(/([0-9]+)$/)[1]
+      const otherinfo = v['otherinfo']
 
-      let hiveCounters = v['otherinfo']['counters']['counterGroups'].find(
+      v2['id'] = v['entity']
+      v2['shortId'] = v['entity'].match(/([0-9]+)$/)[1]
+      v2['name'] = otherinfo['vertexName']
+      v2['status'] = otherinfo['status']
+
+      let hiveCounters = otherinfo['counters']['counterGroups'].find(
         cg => cg['counterGroupName'] == 'HIVE'
       )
       hiveCounters = hiveCounters ? hiveCounters['counters'] : null
@@ -75,41 +86,44 @@ const actions = {
         'counterGroupName',
         'org.apache.hadoop.hive.ql.exec.tez.HiveInputCounters',
         'counters',
-        v['otherinfo']['counters']['counterGroups']
+        otherinfo['counters']['counterGroups']
       )
       let tezCounters = findKv(
         'counterGroupName', 
         'org.apache.tez.common.counters.TaskCounter', 
         'counters', 
-        v['otherinfo']['counters']['counterGroups']
+        otherinfo['counters']['counterGroups']
       )
       const fsCounters = findKv(
         'counterGroupName', 
         'org.apache.tez.common.counters.FileSystemCounter', 
         'counters', 
-        v['otherinfo']['counters']['counterGroups']
+        otherinfo['counters']['counterGroups']
       )
 
       if (hiveInputCounters) {
-        v2['vertexCounterInputFiles'] = hiveInputCounters.find(c => c['counterName'].match(/^INPUT_FILES_/))?.counterValue
-        v2['vertexCounterInputDirs'] = hiveInputCounters.find(c => c['counterName'].match(/^INPUT_DIRECTORIES_/))?.counterValue
+        v2['counterInputFiles'] = hiveInputCounters.find(c => c['counterName'].match(/^INPUT_FILES_/))?.counterValue
+        v2['counterInputDirs'] = hiveInputCounters.find(c => c['counterName'].match(/^INPUT_DIRECTORIES_/))?.counterValue
       }
 
-      v2['vertexCounterInputRecords'] = hiveCounters ? hiveCounters.find(c => c['counterName'].match(/^RECORDS_IN/)) : null
-      v2['vertexCounterInputRecords'] = v2['vertexCounterInputRecords']?.counterValue || tezCounters.find(c => c['counterName'].match(/^(REDUCE_INPUT_RECORDS|INPUT_RECORDS_PROCESSED)/))?.counterValue
+      v2['counterInputRecords'] = hiveCounters ? hiveCounters.find(c => c['counterName'].match(/^RECORDS_IN/)) : null
+      v2['counterInputRecords'] = v2['counterInputRecords']?.counterValue || tezCounters.find(c => c['counterName'].match(/^(REDUCE_INPUT_RECORDS|INPUT_RECORDS_PROCESSED)/))?.counterValue
 
-      v2['vertexCounterOutputRecords'] = findKv('counterName', 'OUTPUT_RECORDS', 'counterValue', tezCounters)
+      v2['counterOutputRecords'] = findKv('counterName', 'OUTPUT_RECORDS', 'counterValue', tezCounters)
 
       if (hiveCounters) {
-        v2['vertexCounterOutputRecords'] = v2['vertexCounterOutputRecords']?.counterValue || hiveCounters.find(c => c['counterName'].match(/^(RECORDS_OUT_1|RECORDS_OUT_OPERATOR_RS)/))['counterValue']
+        v2['counterOutputRecords'] = v2['counterOutputRecords']?.counterValue || hiveCounters.find(c => c['counterName'].match(/^(RECORDS_OUT_1|RECORDS_OUT_OPERATOR_RS)/))['counterValue']
       } else {
-        v2['vertexCounterOutputRecords'] = null
+        v2['counterOutputRecords'] = null
       }
 
-      v2['vertexCounterFileReadBytes'] = findKv('counterName', 'FILE_BYTES_READ', 'counterValue', fsCounters)
-      v2['vertexCounterFileWrittenBytes'] = findKv('counterName', 'FILE_BYTES_WRITTEN', 'counterValue', fsCounters)
-      v2['vertexCounterS3ReadBytes'] = findKv('counterName', 'S3_BYTES_READ', 'counterValue', fsCounters)
-      v2['vertexCounterS3WrittenBytes'] = findKv('counterName', 'S3_BYTES_WRITTEN', 'counterValue', fsCounters)
+      v2['counterFileReadBytes'] = findKv('counterName', 'FILE_BYTES_READ', 'counterValue', fsCounters)
+      v2['counterFileWrittenBytes'] = findKv('counterName', 'FILE_BYTES_WRITTEN', 'counterValue', fsCounters)
+      v2['counterS3ReadBytes'] = findKv('counterName', 'S3_BYTES_READ', 'counterValue', fsCounters)
+      v2['counterS3WrittenBytes'] = findKv('counterName', 'S3_BYTES_WRITTEN', 'counterValue', fsCounters)
+
+      v2['statsAvgTaskDuration'] = otherinfo['stats']['avgTaskDuration']
+      v2['statsMaxTaskDuration'] = otherinfo['stats']['maxTaskDuration']
 
       return v2
     })
@@ -123,7 +137,7 @@ const actions = {
       await dispatch('fetchVertices')
     }
 
-    const vertexFullId = getters.activeVertex['entity']
+    const vertexFullId = getters.activeVertex['id']
 
     let result = await get(`/yarn_timeline/ws/v1/timeline/TEZ_TASK_ID?primaryFilter=TEZ_VERTEX_ID:"${vertexFullId}"`)
     let json = await result.json()
@@ -176,9 +190,9 @@ const actions = {
       const vertexAliases = {}
       json['otherinfo']['dagPlan']['vertices'].forEach(v => {
         if (v['additionalInputs'] && v['additionalInputs'][0] && v['additionalInputs'][0]['name']) {
-          vertexAliases[v['vertexName']] = v['additionalInputs'][0]['name']
+          vertexAliases[v['Name']] = v['additionalInputs'][0]['name']
         } else if (v['additionalOutputs']) {
-          vertexAliases[v['vertexName']] = '**FINAL**'
+          vertexAliases[v['Name']] = '**FINAL**'
         }
       })
   
@@ -197,12 +211,30 @@ const actions = {
 
       commit('setVertexInputs', vertexInputs)
     }
+  },
+  async fetchDagSql({ commit }, dagId) {
+    const openDag = state['dags'].find((d) => d['dagId'] == dagId)
+    commit('setOpenDag', openDag)
+
+    let result = await get(
+      `/yarn_timeline/ws/v1/timeline/TEZ_DAG_EXTRA_INFO/${dagId}`
+    )
+    let json = await result.json()
+    let dagInfo = JSON.parse(json['otherinfo']['dagPlan']['dagInfo'])
+
+    commit('setOpenDagSql', dagInfo['description'])
   }
 }
 
 const mutations = {
   setDags(state, dags) {
     state['dags'] = dags
+  },
+  setOpenDagSql(state, dagSql) {
+    state['openDag']['dagSql'] = dagSql
+  },
+  setOpenDag(state, openDag) {
+    state['openDag'] = openDag
   },
   setDagExtraInfo(state, dagExtraInfo) {
     state['dagExtraInfo'] = dagExtraInfo 

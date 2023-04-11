@@ -14,11 +14,11 @@ const getters = {
     const activeVertex = rootGetters['tezApp/activeVertex']
 
     if (activeDag) {
-      navLinks.push({ name: `DAG #${activeDag['dagId']}`, path: `/apps/${appId}/dags/${activeDag['dagId']}` })
+      navLinks.push({ name: `${activeDag['stage']} #${activeDag['shortId']}`, path: `/apps/${appId}/dags/${activeDag['shortId']}` })
     }
 
     if (activeVertex) {
-      navLinks.push({ name: `${activeVertex['otherinfo']['vertexName']}`, path: `/apps/${appId}/dags/${activeDag['dagId']}/vertex/${activeVertex['vertexId']}` })
+      navLinks.push({ name: `${activeVertex['name']} #${activeVertex['shortId']}`, path: `/apps/${appId}/dags/${activeDag['shortId']}/vertex/${activeVertex['shortId']}` })
     }
 
     return navLinks

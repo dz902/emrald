@@ -26,7 +26,7 @@ export default {
         scaledCounter /= 10**3
       }
 
-      return scaledCounter.toFixed(1)
+      return scaledCounter == counter ? Number.parseInt(scaledCounter) : scaledCounter.toFixed(1)
     },
     unit() {
       let counter = Number.parseFloat(this.counter)

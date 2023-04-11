@@ -20,26 +20,26 @@ div.aui-page-panel
           template(v-for="dagGroup in dagsGroupByCallerId")
             tr(v-for="(dag, i) in dagGroup")
               td
-                | {{ i == 0 ? dag['dagShortName'] : '' }} 
+                | {{ i == 0 ? dagGroup.slice(-1)[0]['shortName'] : '' }} 
                 small(v-if="i == 0")
                   a(
                     href='javascript:void(0)'
-                    @click="fetchDagSql(dagGroup.find(d => d['dagType'] == 'Map / Reduce')['dagId'])"
+                    @click="fetchDagSql(dagGroup.find(d => d['type'] == 'Map / Reduce')['id'])"
                     aria-controls="sql"
                     data-aui-trigger
-                    v-if="i == 0 && dagGroup.find(d => d['dagType'] == 'Map / Reduce')"
+                    v-if="i == 0 && dagGroup.find(d => d['type'] == 'Map / Reduce')"
                   ) view sql
               td
-                router-link(:to="{ path: `/apps/${appId}/dags/${dag['dagShortId']}` }") {{ dag['dagStage'] }}
-              td {{ dag['dagType'] }}
+                router-link(:to="{ path: `/apps/${appId}/dags/${dag['shortId']}` }") {{ dag['stage'] }}
+              td {{ dag['type'] }}
               td
-                | {{ dag['otherinfo']['numSucceededTasks'] }} 
-                span(v-if="dag['otherinfo']['numKilledTasks'] + dag['otherinfo']['numFailedTasks'] > 0")
-                  | (-{{ dag['otherinfo']['numKilledTasks'] + dag['otherinfo']['numFailedTasks'] }})
+                | {{ dag['numSucceededTasks'] }} 
+                span(v-if="dag['numKilledTasks'] + dag['numFailedTasks'] > 0")
+                  | (-{{ dag['numKilledTasks'] + dag['numFailedTasks'] }})
               td
-                status-badge(:status="dag['otherinfo']['status']")
+                status-badge(:status="dag['status']")
               td
-                duration(:startTime="dag['otherinfo']['startTime']",:endTime="dag['otherinfo']['endTime']")
+                duration(:startTime="dag['startTime']",:endTime="dag['endTime']")
       aui-inline-dialog.aui-help.aui-help-text.sql-modal#sql
         div.sql(v-if="!openDag || !openDag['dagSql']")
           | Loading...
@@ -52,7 +52,7 @@ import statusBadge from './StatusBadge'
 import duration from './Duration'
 import { createNamespacedHelpers } from 'vuex'
 
-const { mapActions, mapState } = createNamespacedHelpers('tezJob')
+const { mapActions, mapState } = createNamespacedHelpers('tezApp')
 
 export default {
   name: 'TezJobComponent',
@@ -65,8 +65,8 @@ export default {
     ...mapState(['openDag', 'dags']),
     dagsGroupByCallerId() {
       return this.dags.reduce((p, c) => {
-        p[c['dagCallerId']] = p[c['dagCallerId']] ? p[c['dagCallerId']] : []
-        p[c['dagCallerId']].push(c)
+        p[c['callerId']] = p[c['callerId']] ? p[c['callerId']] : []
+        p[c['callerId']].push(c)
 
         return p
       }, {})

@@ -21,7 +21,7 @@ div.aui-page-panel
                     a(data-aui-trigger,aria-controls="full-id",href="javascript:void(0)",@click="setAppFullId(app)") \#{{ app['shortId'] }}
                   span.aui-lozenge.aui-lozenge-subtle.type.tez {{ app['applicationType'] }}
                 div.info2
-                  router-link(:to="{ path: `/apps/${app['clusterId']}_${app['shortId']}/tez_job` }"): span.name {{ app['name'] }}
+                  router-link(:to="{ path: `/apps/${app['clusterId']}_${app['shortId']}` }"): span.name {{ app['name'] }}
               td
                 span.aui-lozenge.aui-lozenge-subtle(
                   :class="{ \

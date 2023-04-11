@@ -2,14 +2,7 @@
 div.aui-page-panel
   div.aui-page-panel-inner
     main.aui-page-panel-content
-      ol.aui-nav.aui-nav-breadcrumbs
-        li: router-link(:to="{ path: `/apps` }") Apps
-        li 
-          router-link(:to="{ path: `/apps/${$route.params['appId']}/tez_job` }") 
-            span.app-id \#{{ $route.params['appId'] }}  
-          span.aui-lozenge.aui-lozenge-subtle.type.tez Tez
-        li
-          span DAG \#{{ $route.params['dagId'] }}
+      breadcrumbs
       table.aui.aui-table-sortable.dags
         thead
           tr
@@ -23,52 +16,53 @@ div.aui-page-panel
           tr(v-for="v in vertices")
             td 
               div
-                router-link(:to="`${$route.path}/vertex/${v['vertexId']}`") {{ v['otherinfo']['vertexName'] }} 
-                small(v-if="vertexAliases[v['otherinfo']['vertexName']] && vertexAliases[v['otherinfo']['vertexName']] == '**FINAL**'")  FINAL
+                router-link(:to="`${$route.path}/vertex/${v['shortId']}`") {{ v['name'] }} 
+                small(v-if="vertexAliases[v['name']] && vertexAliases[v['name']] == '**FINAL**'")  FINAL
               div
                 small
-                  span(v-if="vertexInputs[v['otherinfo']['vertexName']]") {{ vertexInputs[v['otherinfo']['vertexName']].join(', ') }} 
-                  span(v-if="vertexAliases[v['otherinfo']['vertexName']] && vertexAliases[v['otherinfo']['vertexName']] != '**FINAL**'") {{ vertexAliases[v['otherinfo']['vertexName']] }}
+                  span(v-if="vertexInputs[v['name']]") {{ vertexInputs[v['name']].join(', ') }} 
+                  span(v-if="vertexAliases[v['name']] && vertexAliases[v['name']] != '**FINAL**'") {{ vertexAliases[v['name']] }}
             td
-              status-badge(:status="v['otherinfo']['status']")
+              status-badge(:status="v['status']")
             td
-              div(v-if="v['vertexCounterInputRecords'] && v['vertexCounterOutputRecords']")
-                counter(:counter="v['vertexCounterInputRecords']") 
+              div(v-if="v['counterInputRecords'] && v['counterOutputRecords']")
+                counter(:counter="v['counterInputRecords']") 
                 |  → 
-                counter(:counter="v['vertexCounterOutputRecords']") 
+                counter(:counter="v['counterOutputRecords']") 
               div(v-else)
                 | -
-              div(v-if="v['vertexCounterInputFiles']")
-                | {{ v['vertexCounterInputFiles'] }} 
+              div(v-if="v['counterInputFiles']")
+                | {{ v['counterInputFiles'] }} 
                 small files / 
-                | {{ v['vertexCounterInputDirs'] }} 
+                | {{ v['counterInputDirs'] }} 
                 small dirs
             td
-              div(v-if="v['vertexCounterFileReadBytes'] || v['vertexCounterFileWrittenBytes']")
+              div(v-if="v['counterFileReadBytes'] || v['counterFileWrittenBytes']")
                 small FS 
-                size(:size="v['vertexCounterFileReadBytes']")
+                size(:size="v['counterFileReadBytes']")
                 |  → 
-                size(:size="v['vertexCounterFileWrittenBytes']")
-              div(v-if="v['vertexCounterS3ReadBytes'] || v['vertexCounterS3WrittenBytes']")
+                size(:size="v['counterFileWrittenBytes']")
+              div(v-if="v['counterS3ReadBytes'] || v['counterS3WrittenBytes']")
                 small S3 
-                size(:size="v['vertexCounterS3ReadBytes']")
+                size(:size="v['counterS3ReadBytes']")
                 |  → 
-                size(:size="v['vertexCounterS3WrittenBytes']")
+                size(:size="v['counterS3WrittenBytes']")
             td
-              span {{ v['otherinfo']['numSucceededTasks'] }}
+              span {{ v['numSucceededTasks'] }}
             td
               div
-                duration(:startTime="v['otherinfo']['startTime']", :endTime="v['otherinfo']['endTime']")
+                duration(:startTime="v['startTime']", :endTime="v['endTime']")
               div
                 small (avg 
-                duration(:startTime="0", :endTime="v['otherinfo']['stats']['avgTaskDuration']")
+                duration(:startTime="0", :endTime="v['statsAvgTaskDuration']")
                 small  / max 
-                duration(:startTime="0", :endTime="v['otherinfo']['stats']['maxTaskDuration']")
+                duration(:startTime="0", :endTime="v['statsMaxTaskDuration']")
                 small )
 </template>
 
 <script>
 import statusBadge from './StatusBadge'
+import breadcrumbs from './Breadcrumbs'
 import counter from './Counter'
 import duration from './Duration'
 import size from './Size'
@@ -104,7 +98,8 @@ export default {
     statusBadge,
     duration,
     counter,
-    size
+    size,
+    breadcrumbs
   }
 }
 </script>

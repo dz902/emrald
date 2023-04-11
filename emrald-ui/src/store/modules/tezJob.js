@@ -30,6 +30,12 @@ const actions = {
       d['dagShortName'] = result ? result[1] : d['dagType']
       d['dagStage'] = result ? result[2] : d['dagType']
       d['dagCallerId'] = otherinfo['callerId']
+      d['dagTaskSucceeded'] = otherinfo['numSucceededTasks']
+      d['dagTaskKilled'] = otherinfo['numKilledTasks']
+      d['dagTaskFailed'] = otherinfo['numFailedTasks']
+      d['dagStatus'] = otherinfo['status']
+      d['dagStartTime'] = otherinfo['startTime']
+      d['dagEndTime'] = otherinfo['endTime']
 
       const endTime = otherinfo['endTime'] ? otherinfo['endTime'] : (new Date()).getTime()
       d['dagDuration'] = Math.round((endTime-otherinfo['startTime'])/1000)

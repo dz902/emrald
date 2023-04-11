@@ -1,7 +1,8 @@
 <template lang="pug">
 ol.aui-nav.aui-nav-breadcrumbs
-  li(v-for="link in navLinks")
-    router-link(:to="{ path: link['path'] }") {{ link['name'] }}
+  li(v-for="(link, i) in navLinks")
+    router-link(v-if="i != navLinks.length-1",:to="{ path: link['path'] }") {{ link['name'] }}
+    span(v-else) {{ link['name'] }}
     | {{ link['extra'] }}
 </template>
 
