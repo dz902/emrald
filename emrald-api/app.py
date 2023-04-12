@@ -90,3 +90,21 @@ def yarn_timeline(path):
         'Access-Control-Allow-Headers': 'Content-Type',
         'Access-Control-Max-Age': '300'
       })
+
+
+@app.route('/yarn_nm/<path:path>', methods=['GET', 'OPTIONS'])
+def yarn_nm(path):
+    if request.method == 'GET':
+      if request.method == 'GET':
+        response = rest.get(f'{path}?{request.query_string.decode("ascii")}')
+
+      return Response(response.data, 200, mimetype = 'application/json', headers = {
+        'Access-Control-Allow-Origin': '*'
+      })
+    elif request.method == 'OPTIONS':
+      return Response(None, 200, headers = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Max-Age': '300'
+      })

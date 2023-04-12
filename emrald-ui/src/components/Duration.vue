@@ -38,12 +38,12 @@ export default {
 function secondsToHms(dt) {
   dt = Number.parseFloat(dt);
 
-  const day = (dt / (3600 * 24)).toFixed(1)
+  const days = (dt / (3600 * 24)).toFixed(1)
   const hours = (dt / 3600).toFixed(1)
   const minutes = (dt / 60).toFixed(1)
   const seconds = Math.round(dt)
 
-  return { day, hours, minutes, seconds }
+  return { days, hours, minutes, seconds }
 }
 </script>
 

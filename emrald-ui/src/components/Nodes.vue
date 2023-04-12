@@ -10,6 +10,7 @@ div.aui-page-panel
             th containers
             th resource
             th last update
+            th uptime
         tbody
           tr(v-for="n in nodes")
             td {{ n['shortId'] }}
@@ -41,6 +42,13 @@ div.aui-page-panel
                 small  ago
               div
                 small {{ dateFormat(n['lastHealthUpdate'], 'yyyy-MM-dd HH:mm:ss') }}
+            td
+              template(v-if="n['nodeInfo']")
+                div
+                  duration(:startTime="n['nodeInfo']['startupTime']")
+                div
+                  small {{ dateFormat(n['nodeInfo']['startupTime'], 'yyyy-MM-dd HH:mm:ss') }} 
+              div(v-else) -
 </template>
 
 <script>
