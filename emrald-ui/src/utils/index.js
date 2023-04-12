@@ -24,6 +24,10 @@ function secondsToHms(dt) {
   return { day, hours, minutes, seconds }
 }
 
+function extractIpFromHostName(hostName) {
+  return hostName.match(/^ip-((?:[0-9]+-){3}[0-9]+).+$/)?.[1] || hostName
+}
+
 export {
-  get, secondsToHms, findKv
+  get, secondsToHms, findKv, extractIpFromHostName
 }

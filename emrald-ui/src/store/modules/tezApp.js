@@ -148,7 +148,7 @@ const actions = {
 
     dispatch('fetchDagExtraInfo')
   },
-  async fetchTasks({ commit, getters, dispatch, rootState }) {
+  async fetchTasks({ commit, getters, dispatch }) {
     if (!getters.activeVertex) {
       await dispatch('fetchVertices')
     }

@@ -33,7 +33,7 @@ import statusBadge from './StatusBadge'
 import duration from './Duration'
 
 import { createNamespacedHelpers } from 'vuex'
-const { mapActions, mapState, mapGetters } = createNamespacedHelpers('tezApp')
+const { mapActions, mapState } = createNamespacedHelpers('tezApp')
 
 export default {
   name: 'TezVertexComponent',

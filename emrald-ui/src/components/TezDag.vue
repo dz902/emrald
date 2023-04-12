@@ -7,10 +7,10 @@ div.aui-page-panel
         thead
           tr
             th Vertex
-            th Status
             th Records
             th I/O
             th Tasks
+            th Status
             th Duration
         tbody
           tr(v-for="v in vertices")
@@ -23,8 +23,6 @@ div.aui-page-panel
                   span(v-if="vertexInputs[v['name']]") {{ vertexInputs[v['name']].join(', ') }} 
                   span(v-if="vertexAliases[v['name']] && vertexAliases[v['name']] != '**FINAL**'") {{ vertexAliases[v['name']] }} 
                   span(v-if="v['outputTable']")  → {{ v['outputTable'] }}
-            td
-              status-badge(:status="v['status']")
             td
               div(v-if="v['counterInputRecords'] && v['counterOutputRecords']")
                 counter(:counter="v['counterInputRecords']") 
@@ -55,6 +53,8 @@ div.aui-page-panel
                 size(:size="v['counterS3WrittenBytes']")
             td
               span {{ v['numSucceededTasks'] }}
+            td
+              status-badge(:status="v['status']")
             td
               div
                 duration(:startTime="v['startTime']", :endTime="v['endTime']")

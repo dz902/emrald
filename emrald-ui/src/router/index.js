@@ -1,5 +1,6 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 import store from '../store'
+import Nodes from '../components/Nodes'
 import Apps from '../components/Apps'
 import TezJob from '../components/TezJob'
 import TezDag from '../components/TezDag'
@@ -13,7 +14,8 @@ const routes = [
   },
   { path: "/apps/:appId", component: TezJob },
   { path: "/apps/:appId/dags/:dagId", component: TezDag },
-  { path: "/apps/:appId/dags/:dagId/vertex/:vertexId", component: TezVertex }
+  { path: "/apps/:appId/dags/:dagId/vertex/:vertexId", component: TezVertex },
+  { path: "/nodes", component: Nodes }
 ]
 
 const router = createRouter({

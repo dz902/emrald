@@ -10,7 +10,7 @@ div.aui-page-panel
       table.aui.aui-table-sortable.dags
         thead
           tr
-            th DAG
+            th Name
             th Stage
             th Type
             th Tasks

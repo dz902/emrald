@@ -8,6 +8,7 @@ div#content
             div.aui-sidebar-group
               ul.aui-nav
                 li: router-link.aui-nav-item(:to="{ path:'/cluster' }") Cluster
+                li: router-link.aui-nav-item(:to="{ path:'/nodes' }") Nodes
                 li: router-link.aui-nav-item(:to="{ path:'/apps' }") Apps
   router-view.page-content
 </template>
